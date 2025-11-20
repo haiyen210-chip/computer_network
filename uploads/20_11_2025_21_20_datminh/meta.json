@@ -1,0 +1,39 @@
+{
+  "token": "VALID_TOKEN_123",
+  "userName": "datminh",
+  "startTime": "2025-11-20T14:20:57.837Z",
+  "questions": [
+    {
+      "index": "1",
+      "file": "Q1.webm",
+      "transcript": "",
+      "uploadTime": "2025-11-20T14:21:26.840Z"
+    },
+    {
+      "index": "2",
+      "file": "Q2.webm",
+      "transcript": "",
+      "uploadTime": "2025-11-20T14:21:32.031Z"
+    },
+    {
+      "index": "3",
+      "file": "Q3.webm",
+      "transcript": "",
+      "uploadTime": "2025-11-20T14:21:36.631Z"
+    },
+    {
+      "index": "4",
+      "file": "Q4.webm",
+      "transcript": "",
+      "uploadTime": "2025-11-20T14:21:43.733Z"
+    },
+    {
+      "index": "5",
+      "file": "Q5.webm",
+      "transcript": "",
+      "uploadTime": "2025-11-20T14:21:48.442Z"
+    }
+  ],
+  "finishTime": "2025-11-20T14:22:05.518Z",
+  "totalQuestionsReported": 5
+}

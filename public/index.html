@@ -1,365 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Video Interview</title>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        display: grid;
-        place-items: center;
-        min-height: 90vh;
-        background: #f4f4f4;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: #f0f2f5;
+        margin: 0;
       }
       #container {
         background: #fff;
         padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
         width: 640px;
+        max-width: 90%;
       }
+      
+      /* --- Progress Bar --- */
+      #progress-container {
+        width: 100%;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 1.5rem;
+        height: 8px;
+        overflow: hidden;
+      }
+      #progress-fill {
+        height: 100%;
+        background-color: #007bff;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+      
+      /* --- Timer --- */
+      #timer {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 0.5rem;
+        text-align: right;
+      }
+      .timer-warning {
+        color: #dc3545 !important; /* Red color for warning */
+        animation: blink 1s infinite;
+      }
+
       video {
         width: 100%;
         background: #000;
-        border-radius: 4px;
+        border-radius: 8px;
         margin-bottom: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       }
-      .hidden {
-        display: none;
-      }
+      .hidden { display: none; }
+      
       input {
-        width: calc(100% - 1rem);
-        padding: 0.5rem;
+        width: 100%;
+        padding: 10px;
         margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      
+      /* --- Buttons --- */
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
       }
       button {
-        padding: 0.75rem 1.5rem;
+        padding: 12px 20px;
         border: none;
-        background: #007bff;
         color: white;
         font-size: 1rem;
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
+        transition: background 0.2s;
+        flex: 1;
       }
-      button:disabled {
-        background: #ccc;
+      #start-session-btn { background: #28a745; width: 100%; }
+      #next-btn { background: #007bff; }
+      #finish-btn { background: #28a745; }
+      
+      /* Re-record Button (Yellow/Orange) */
+      #rerecord-btn { 
+        background: #ffc107; 
+        color: #333; 
       }
+      #rerecord-btn:disabled {
+        background: #e0e0e0;
+        color: #999;
+        cursor: not-allowed;
+      }
+      
+      button:hover:not(:disabled) { opacity: 0.9; }
+
       #status {
         margin-top: 1rem;
-        font-weight: bold;
+        text-align: center;
+        font-weight: 500;
       }
-      #question {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
-      }
-      /* NEW: Style for live transcript */
+      
+      /* --- Live Transcript Box --- */
       #live-transcript {
         font-style: italic;
-        color: #555;
-        border: 1px solid #ddd;
-        padding: 8px;
-        min-height: 40px;
-        border-radius: 4px;
+        color: #666;
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        padding: 10px;
+        min-height: 60px;
+        border-radius: 6px;
+        margin-top: 10px;
+        font-size: 0.9rem;
       }
+
+      /* --- Upload Progress --- */
+      #upload-progress-bar-container {
+        width: 100%;
+        background-color: #eee;
+        border-radius: 4px;
+        margin-top: 10px;
+        height: 10px;
+      }
+      #upload-progress-fill {
+        height: 100%;
+        background-color: #28a745;
+        width: 0%;
+        transition: width 0.2s;
+      }
+
+      @keyframes blink { 50% { opacity: 0.5; } }
     </style>
   </head>
   <body>
     <div id="container">
+      <!-- Global Progress Bar -->
+      <div id="progress-container" class="hidden">
+        <div id="progress-fill"></div>
+      </div>
+
+      <!-- 1. Start Screen -->
       <div id="start-screen">
-        <h2>Video Interview</h2>
-        <input type="text" id="token" placeholder="Enter Token" />
+        <h2 style="text-align:center">Video Interview</h2>
+        <input type="text" id="token" placeholder="Enter Token (VALID_TOKEN_123)" />
         <input type="text" id="name" placeholder="Enter Your Name" />
         <button id="start-session-btn">Start Session</button>
       </div>
 
+      <!-- 2. Interview Screen -->
       <div id="interview-screen" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <h3 id="question-header">Question 1</h3>
+          <div id="timer">02:00</div>
+        </div>
+        <p id="question-text" style="font-size: 1.1rem; margin-bottom: 1rem;"></p>
+        
         <video id="video-preview" autoplay muted playsinline></video>
-        <h3 id="question"></h3>
-        <p>Your transcribed text:</p>
-        <div id="live-transcript">(Speaking will appear here...)</div>
-        <br />
-        <button id="next-btn">Next Question</button>
-        <button id="finish-btn" class="hidden">Finish Session</button>
+        
+        <!-- Live Transcript -->
+        <div id="live-transcript">(Transcript will appear here...)</div>
+        
+        <!-- Upload Progress -->
+        <div id="upload-status-container" class="hidden">
+          <p style="margin:5px 0; font-size:0.9rem">Uploading...</p>
+          <div id="upload-progress-bar-container">
+            <div id="upload-progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="btn-group">
+          <button id="rerecord-btn">Re-record (1 left)</button>
+          <button id="next-btn">Next Question</button>
+          <button id="finish-btn" class="hidden">Finish Session</button>
+        </div>
       </div>
 
-      <div id="finish-screen" class="hidden">
-        <h2>Thank you!</h2>
-        <p>Your session is complete and all videos have been uploaded.</p>
+      <!-- 3. Finish Screen -->
+      <div id="finish-screen" class="hidden" style="text-align:center">
+        <h2>Interview Complete!</h2>
+        <p>All answers have been uploaded successfully.</p>
+        <p>A confirmation email has been sent to the administrator.</p>
       </div>
 
       <div id="status"></div>
     </div>
 
-    <script>
-      // --- Mock Questions ---
-      const QUESTIONS = [
-        '1. Tell me about yourself.',
-        '2. What is your biggest strength?',
-        '3. What is your biggest weakness?',
-        '4. Where do you see yourself in 5 years?',
-        '5. Why should we hire you?',
-      ];
-
-      // --- DOM Elements ---
-      const startScreen = document.getElementById('start-screen');
-      const interviewScreen = document.getElementById('interview-screen');
-      const finishScreen = document.getElementById('finish-screen');
-      const tokenInput = document.getElementById('token');
-      const nameInput = document.getElementById('name');
-      const startSessionBtn = document.getElementById('start-session-btn');
-      const videoPreview = document.getElementById('video-preview');
-      const questionText = document.getElementById('question');
-      const nextBtn = document.getElementById('next-btn');
-      const finishBtn = document.getElementById('finish-btn');
-      const statusText = document.getElementById('status');
-      // NEW: Transcript elements
-      const liveTranscriptEl = document.getElementById('live-transcript');
-
-      // --- State Variables ---
-      let mediaRecorder;
-      let recordedChunks = [];
-      let localStream;
-      let sessionToken = '';
-      let sessionFolder = '';
-      let currentQuestionIndex = 0;
-      const API_BASE = 'http://localhost:3000';
-
-      // --- NEW: Speech Recognition Variables ---
-      let recognition;
-      let currentTranscript = ''; // Stores the final text for this question
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      // Check if browser supports the API
-      if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = true; // Keep listening
-        recognition.interimResults = true; // Show results as they come
-
-        // This event fires when the browser hears speech
-        recognition.onresult = (event) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
-
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
-            } else {
-              interimTranscript += event.results[i][0].transcript;
-            }
-          }
-          // Update the live transcript box
-          liveTranscriptEl.innerText = interimTranscript;
-          // Add the final part to our stored variable
-          if (finalTranscript) {
-            currentTranscript += finalTranscript + ' ';
-          }
-        };
-
-        // Handle errors
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error:', event.error);
-        };
-      } else {
-        console.warn('Speech Recognition not supported by this browser.');
-        liveTranscriptEl.innerText =
-          'Speech recognition not supported by this browser.';
-      }
-      // --- END of NEW Speech Recognition Setup ---
-
-      // --- Event Listeners ---
-      startSessionBtn.addEventListener('click', startSession);
-      nextBtn.addEventListener('click', handleNext);
-      finishBtn.addEventListener('click', handleFinish);
-
-      // --- 1. Start Session (Modified) ---
-      async function startSession() {
-        const token = tokenInput.value;
-        const userName = nameInput.value;
-        if (!token || !userName) {
-          setStatus('Please enter both token and name.', true);
-          return;
-        }
-        setStatus('Verifying token...');
-        startSessionBtn.disabled = true;
-
-        try {
-          const verifyRes = await fetch(`${API_BASE}/api/verify-token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
-          });
-          if (!verifyRes.ok) throw new Error('Invalid Token');
-
-          const sessionRes = await fetch(`${API_BASE}/api/session/start`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, userName }),
-          });
-          if (!sessionRes.ok) throw new Error('Could not start session');
-          const data = await sessionRes.json();
-          sessionToken = token;
-          sessionFolder = data.folder;
-
-          setStatus('Requesting camera/microphone...');
-          localStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true,
-          });
-          videoPreview.srcObject = localStream;
-
-          startScreen.classList.add('hidden');
-          interviewScreen.classList.remove('hidden');
-          setStatus('');
-          startRecording(); // Start first question
-        } catch (err) {
-          console.error(err);
-          setStatus(`Error: ${err.message}`, true);
-          startSessionBtn.disabled = false;
-        }
-      }
-
-      // --- 2. Recording Logic (Modified) ---
-      function startRecording() {
-        questionText.innerText = QUESTIONS[currentQuestionIndex];
-        nextBtn.disabled = false;
-
-        // This is the bug fix from before
-        if (currentQuestionIndex < QUESTIONS.length - 1) {
-          finishBtn.classList.add('hidden');
-        }
-
-        // Reset transcript
-        currentTranscript = '';
-        liveTranscriptEl.innerText = '(Speaking will appear here...)';
-
-        // Start video recorder
-        recordedChunks = [];
-        mediaRecorder = new MediaRecorder(localStream, {
-          mimeType: 'video/webm',
-        });
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) recordedChunks.push(event.data);
-        };
-        mediaRecorder.onstop = uploadCurrentQuestion; // This stays the same
-        mediaRecorder.start();
-
-        // NEW: Start speech recognition
-        if (recognition) {
-          recognition.start();
-        }
-
-        setStatus(`Recording Question ${currentQuestionIndex + 1}...`);
-      }
-
-      function stopRecording() {
-        nextBtn.disabled = true;
-
-        // NEW: Stop speech recognition
-        if (recognition) {
-          recognition.stop();
-        }
-
-        // Stop video recorder (this triggers 'onstop' and 'uploadCurrentQuestion')
-        mediaRecorder.stop();
-      }
-
-      // --- 3. Upload Logic (Modified) ---
-      async function uploadCurrentQuestion() {
-        setStatus(
-          `Uploading Question ${
-            currentQuestionIndex + 1
-          }... (this may take a moment)`
-        );
-
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const formData = new FormData();
-        formData.append('token', sessionToken);
-        formData.append('folder', sessionFolder);
-        formData.append('questionIndex', currentQuestionIndex + 1);
-        formData.append('video', blob, `Q${currentQuestionIndex + 1}.webm`);
-        
-        // --- NEW: Add the transcript text to the upload ---
-        formData.append('transcript', currentTranscript.trim());
-
-        try {
-          const res = await fetch(`${API_BASE}/api/upload-one`, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!res.ok) throw new Error('Upload failed');
-          const data = await res.json();
-          console.log('Upload success:', data);
-          setStatus(`Question ${currentQuestionIndex + 1} uploaded.`);
-
-          currentQuestionIndex++;
-          if (currentQuestionIndex < QUESTIONS.length) {
-            if (currentQuestionIndex === QUESTIONS.length - 1) {
-              nextBtn.classList.add('hidden');
-              finishBtn.classList.remove('hidden');
-            }
-            startRecording(); // Start next question
-          }
-        } catch (err) {
-          console.error(err);
-          setStatus(`Error uploading: ${err.message}. Please try again.`, true);
-          nextBtn.disabled = false; // Allow retry
-        }
-      }
-
-      // --- 4. Handle "Next" / "Finish" Clicks ---
-      function handleNext() {
-        stopRecording(); // This triggers stop on both recorders, then upload
-      }
-
-      async function handleFinish() {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          finishBtn.disabled = true;
-          // Set onstop to upload *and then* finalize
-          mediaRecorder.onstop = async () => {
-            await uploadCurrentQuestion();
-            await finalizeSession();
-          };
-          stopRecording(); // Stop both recorders
-        } else {
-          await finalizeSession();
-        }
-      }
-
-      // --- 5. Finalize Session (No change) ---
-      async function finalizeSession() {
-        setStatus('Finishing session...');
-        try {
-          await fetch(`${API_BASE}/api/session/finish`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              token: sessionToken,
-              folder: sessionFolder,
-              questionsCount: currentQuestionIndex + 1,
-            }),
-          });
-
-          localStream.getTracks().forEach((track) => track.stop());
-          videoPreview.srcObject = null;
-
-          interviewScreen.classList.add('hidden');
-          finishScreen.classList.remove('hidden');
-          setStatus('');
-        } catch (err) {
-          console.error(err);
-          setStatus(`Error finishing session: ${err.message}`, true);
-          finishBtn.disabled = false;
-        }
-      }
-
-      // --- Utility (No change) ---
-      function setStatus(message, isError = false) {
-        statusText.innerText = message;
-        statusText.style.color = isError ? 'red' : 'black';
-      }
-    </script>
+    <script src="app.js"></script>
   </body>
 </html>
