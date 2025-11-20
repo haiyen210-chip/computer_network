@@ -1,6 +1,7 @@
 // --- Configuration ---
 const API_BASE = 'http://localhost:3000';
-const QUESTION_TIME_LIMIT_SEC = 180; // 3 Minutes per question
+const QUESTION_TIME_LIMIT_SEC = 180; 
+const AI_REFRESH_RATE_MS = 12000; // 12 Seconds
 
 const QUESTIONS = [
   '1. Tell me about yourself.',
@@ -31,6 +32,11 @@ const nextBtn = document.getElementById('next-btn');
 const finishBtn = document.getElementById('finish-btn');
 const rerecordBtn = document.getElementById('rerecord-btn');
 
+// AI Elements
+const aiAssistBtn = document.getElementById('ai-assist-btn');
+const aiPanel = document.getElementById('ai-panel');
+const aiContent = document.getElementById('ai-content');
+
 const uploadStatusContainer = document.getElementById('upload-status-container');
 const uploadProgressFill = document.getElementById('upload-progress-fill');
 const statusText = document.getElementById('status');
@@ -51,6 +57,10 @@ let recognition;
 let currentTranscript = '';
 let isRecognitionActive = false;
 
+// --- AI Auto-Coach State ---
+let aiInterval = null;
+let isAiActive = false;
+
 // --- Speech Recognition Setup ---
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -61,14 +71,11 @@ if (SpeechRecognition) {
   recognition.lang = 'en-US';
 
   recognition.onstart = () => {
-    console.log("Speech recognition STARTED");
     isRecognitionActive = true;
   };
 
   recognition.onend = () => {
-    console.log("Speech recognition ENDED");
     isRecognitionActive = false;
-    // Auto-restart if we are still recording video and it wasn't stopped manually
     if (mediaRecorder && mediaRecorder.state === 'recording') {
         try { recognition.start(); } catch(e) {}
     }
@@ -84,13 +91,6 @@ if (SpeechRecognition) {
     if (liveTranscriptEl) liveTranscriptEl.innerText = interim || final || '...';
     if (final) currentTranscript += final + ' ';
   };
-
-  recognition.onerror = (event) => {
-    console.error("Speech Error:", event.error);
-    if (event.error === 'aborted' || event.error === 'no-speech') {
-        isRecognitionActive = false;
-    }
-  };
 }
 
 // --- Event Listeners ---
@@ -98,6 +98,9 @@ startSessionBtn.addEventListener('click', startSession);
 nextBtn.addEventListener('click', () => stopRecordingAndUpload(false)); 
 finishBtn.addEventListener('click', () => stopRecordingAndUpload(false));
 rerecordBtn.addEventListener('click', handleReRecord);
+
+// NEW: Toggle instead of single click
+aiAssistBtn.addEventListener('click', toggleAICoach);
 
 // --- 1. Start Session ---
 async function startSession() {
@@ -147,16 +150,105 @@ async function startSession() {
   }
 }
 
-// --- 2. Recording Logic ---
+// --- 2. AI Auto-Coach Logic ---
+function toggleAICoach() {
+    if (isAiActive) {
+        stopAICoach();
+    } else {
+        startAICoach();
+    }
+}
+
+function startAICoach() {
+    isAiActive = true;
+    aiPanel.classList.remove('hidden');
+    aiAssistBtn.innerText = "🛑 Stop Live Coach";
+    aiAssistBtn.classList.add('ai-active');
+    
+    // Run once immediately, then loop
+    getAICoachTips();
+    aiInterval = setInterval(getAICoachTips, AI_REFRESH_RATE_MS);
+}
+
+function stopAICoach() {
+    isAiActive = false;
+    clearInterval(aiInterval);
+    aiAssistBtn.innerText = "✨ Start Live AI Coach";
+    aiAssistBtn.classList.remove('ai-active');
+}
+
+async function getAICoachTips() {
+  if (!isAiActive) return; // Double check
+
+  const currentQ = QUESTIONS[currentQuestionIndex];
+  
+  try {
+    // Don't send if transcript is too short yet (saves API calls)
+    if (!currentTranscript || currentTranscript.trim().length < 5) {
+        // Optional: update status but don't fetch
+        return;
+    }
+
+    const res = await fetch(`${API_BASE}/api/ai-assist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+          question: currentQ,
+          transcript: currentTranscript 
+      })
+    });
+    
+    const result = await res.json();
+    
+    if (result.success && result.data) {
+        // Create a new card for this advice batch
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        const newCard = document.createElement('div');
+        newCard.className = 'ai-advice-card';
+        
+        let html = `<div style="font-size:0.75rem; color:#888; margin-bottom:5px; display:flex; justify-content:space-between;">
+                      <span>Feedback at ${timestamp}</span>
+                    </div>`;
+        
+        html += '<ul>';
+        result.data.tips.forEach(tip => {
+            html += `<li>${tip}</li>`;
+        });
+        html += '</ul>';
+        
+        if (result.data.opener) {
+             html += `<div class="ai-opener"><strong>Suggestion:</strong> "${result.data.opener}"</div>`;
+        }
+
+        newCard.innerHTML = html;
+        
+        // PREPEND: Add new advice to the TOP of the list
+        aiContent.prepend(newCard);
+        
+    } else {
+        console.error("AI Error:", result);
+    }
+  } catch (err) {
+    console.error("AI Fetch Error:", err);
+  }
+}
+
+// --- 3. Recording Logic ---
 function startRecording() {
   // Reset State
   recordedChunks = [];
   currentTranscript = '';
   if (liveTranscriptEl) liveTranscriptEl.innerText = '(Listening...)';
   
-  // Update UI
+  // Reset UI for new question
   if(questionHeader) questionHeader.innerText = `Question ${currentQuestionIndex + 1}`;
   if(questionText) questionText.innerText = QUESTIONS[currentQuestionIndex];
+  
+  // Reset AI UI - Important: Stop the previous interval!
+  stopAICoach();
+  aiContent.innerHTML = ''; // Clear previous question's tips
+  aiPanel.classList.add('hidden');
   
   if(progressFill) {
       const percent = ((currentQuestionIndex) / QUESTIONS.length) * 100;
@@ -165,10 +257,8 @@ function startRecording() {
 
   updateButtonsState();
 
-  // CRITICAL FIX: Ensure speech recognition is fully stopped before restarting
   if (recognition && isRecognitionActive) {
       recognition.stop();
-      // Wait 200ms before restarting to allow cleanup
       setTimeout(actuallyStartRecording, 200);
   } else {
       actuallyStartRecording();
@@ -176,12 +266,10 @@ function startRecording() {
 }
 
 function actuallyStartRecording() {
-  // Start Video
   mediaRecorder = new MediaRecorder(localStream, { mimeType: 'video/webm' });
   mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.start();
 
-  // Start Speech
   if (recognition) {
       try { recognition.start(); } catch(e) { console.log("Speech start error:", e); }
   }
@@ -216,11 +304,11 @@ function updateTimerDisplay() {
   else timerEl.classList.remove('timer-warning');
 }
 
-// --- 3. Stop & Handle Action ---
+// --- 4. Stop & Handle Action ---
 function stopRecordingAndUpload(isReRecording) {
   clearInterval(timerInterval);
+  stopAICoach(); // Ensure AI stops when question ends
 
-  // Explicitly stop recognition to free it up for next question
   if (recognition) {
       recognition.stop();
       isRecognitionActive = false;
@@ -229,7 +317,6 @@ function stopRecordingAndUpload(isReRecording) {
   if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.onstop = () => {
         if (isReRecording) {
-          console.log("Discarding video, restarting...");
           startRecording();
         } else {
           uploadVideo();
@@ -263,7 +350,7 @@ function updateButtonsState() {
   }
 }
 
-// --- 4. Upload Logic ---
+// --- 5. Upload Logic ---
 function uploadVideo() {
   if(uploadStatusContainer) uploadStatusContainer.classList.remove('hidden');
   
@@ -287,7 +374,6 @@ function uploadVideo() {
 
   xhr.onload = async () => {
     if (xhr.status === 200) {
-      console.log("Upload success");
       if(uploadStatusContainer) uploadStatusContainer.classList.add('hidden');
       if(uploadProgressFill) uploadProgressFill.style.width = '0%';
 
@@ -312,7 +398,6 @@ function uploadVideo() {
   xhr.send(formData);
 }
 
-// --- 5. Finalize ---
 async function finalizeSession() {
   setStatus('Finalizing...');
   if(progressFill) progressFill.style.width = '100%'; 

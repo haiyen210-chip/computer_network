@@ -1,0 +1,10 @@
+Q1: 
+
+Q2: Hello 12345678 I'm testing to see if this transcript is working. And perhaps it is because even after I clicked onto the next question, it still doesn't, uh, it still doesn't break.
+
+Q3: 
+
+Q4: Which is great news because I spent a lot of times trying to figure out how to make this work without the AI of transcript breaking every single time I click next question. Normally after I click onto the next question then the then AI wouldn't work because the transcript it's the it's was still being. Processed.
+
+Q5: Wow, even though I don't know what to say anymore, I would say I'm pretty glad that I managed to finish working on this back end. It's 2:30 AM right now and I'm really tired so I'll stop right here.
+

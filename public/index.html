@@ -48,7 +48,7 @@
         text-align: right;
       }
       .timer-warning {
-        color: #dc3545 !important; /* Red color for warning */
+        color: #dc3545 !important;
         animation: blink 1s infinite;
       }
 
@@ -59,7 +59,7 @@
         margin-bottom: 1rem;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       }
-      .hidden { display: none; }
+      .hidden { display: none !important; }
       
       input {
         width: 100%;
@@ -90,7 +90,6 @@
       #next-btn { background: #007bff; }
       #finish-btn { background: #28a745; }
       
-      /* Re-record Button (Yellow/Orange) */
       #rerecord-btn { 
         background: #ffc107; 
         color: #333; 
@@ -101,6 +100,55 @@
         cursor: not-allowed;
       }
       
+      /* --- AI BUTTON & PANEL --- */
+      #ai-assist-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: bold;
+        margin-bottom: 15px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      }
+      #ai-assist-btn:hover { opacity: 0.95; transform: translateY(-1px); }
+      
+      /* Active State for AI Button (Red) */
+      .ai-active {
+        background: #dc3545 !important; /* Red */
+        box-shadow: 0 0 10px rgba(220, 53, 69, 0.4);
+      }
+
+      #ai-panel {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-left: 4px solid #764ba2;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        /* Scrollable History */
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      
+      /* New styling for history cards */
+      .ai-advice-card {
+        background: white;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        animation: slideIn 0.3s ease-out;
+      }
+
+      .ai-header { font-weight: bold; color: #764ba2; margin-bottom: 8px; display: flex; justify-content: space-between; }
+      .ai-content ul { margin: 0; padding-left: 20px; margin-bottom: 10px; }
+      .ai-content li { margin-bottom: 5px; color: #444; }
+      .ai-opener { font-style: italic; color: #555; background: #f0f8ff; padding: 8px; border-radius: 4px; border: 1px dashed #007bff; }
+
       button:hover:not(:disabled) { opacity: 0.9; }
 
       #status {
@@ -109,7 +157,6 @@
         font-weight: 500;
       }
       
-      /* --- Live Transcript Box --- */
       #live-transcript {
         font-style: italic;
         color: #666;
@@ -122,7 +169,6 @@
         font-size: 0.9rem;
       }
 
-      /* --- Upload Progress --- */
       #upload-progress-bar-container {
         width: 100%;
         background-color: #eee;
@@ -138,11 +184,11 @@
       }
 
       @keyframes blink { 50% { opacity: 0.5; } }
+      @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
     </style>
   </head>
   <body>
     <div id="container">
-      <!-- Global Progress Bar -->
       <div id="progress-container" class="hidden">
         <div id="progress-fill"></div>
       </div>
@@ -159,16 +205,28 @@
       <div id="interview-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center">
           <h3 id="question-header">Question 1</h3>
-          <div id="timer">02:00</div>
+          <div id="timer">03:00</div>
         </div>
         <p id="question-text" style="font-size: 1.1rem; margin-bottom: 1rem;"></p>
         
+        <!-- UPDATED: AI Coach Section -->
+        <button id="ai-assist-btn">✨ Start Live AI Coach</button>
+        
+        <div id="ai-panel" class="hidden">
+            <div class="ai-header">
+                <span>Live Feedback Feed:</span>
+                <span style="font-size:0.8rem; color:#666">Updates every 12s</span>
+            </div>
+            <div id="ai-content" class="ai-content">
+                <!-- Tips will stack here -->
+            </div>
+        </div>
+        <!-- End AI Section -->
+
         <video id="video-preview" autoplay muted playsinline></video>
         
-        <!-- Live Transcript -->
         <div id="live-transcript">(Transcript will appear here...)</div>
         
-        <!-- Upload Progress -->
         <div id="upload-status-container" class="hidden">
           <p style="margin:5px 0; font-size:0.9rem">Uploading...</p>
           <div id="upload-progress-bar-container">
@@ -176,7 +234,6 @@
           </div>
         </div>
 
-        <!-- Control Buttons -->
         <div class="btn-group">
           <button id="rerecord-btn">Re-record (1 left)</button>
           <button id="next-btn">Next Question</button>
@@ -188,7 +245,6 @@
       <div id="finish-screen" class="hidden" style="text-align:center">
         <h2>Interview Complete!</h2>
         <p>All answers have been uploaded successfully.</p>
-        <p>A confirmation email has been sent to the administrator.</p>
       </div>
 
       <div id="status"></div>
