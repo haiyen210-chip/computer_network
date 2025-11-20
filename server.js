@@ -1,8 +1,20 @@
+require('dotenv').config(); // đọc .env
+
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+
+// === GEMINI CONFIG ===
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+if (!process.env.GEMINI_API_KEY) {
+  console.warn('⚠️ GEMINI_API_KEY is missing in .env');
+}
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });  
 
 const app = express();
 const port = 3000;
@@ -150,6 +162,59 @@ app.post('/api/session/finish', (req, res) => {
     res.status(500).json({ ok: false, message: 'Failed to finalize session' });
   }
 });
+// POST /api/ai-review
+// body: { folder: "2025_11_20_..._username", language?: "vi" | "en" }
+app.post('/api/ai-review', async (req, res) => {
+  const { folder, language = 'vi' } = req.body;
+
+  if (!folder) {
+    return res.status(400).json({ ok: false, message: 'folder is required' });
+  }
+
+  const transcriptPath = path.join(__dirname, 'uploads', folder, 'transcript.txt');
+
+  if (!fs.existsSync(transcriptPath)) {
+    return res
+      .status(404)
+      .json({ ok: false, message: 'transcript.txt not found for this folder' });
+  }
+
+  try {
+    const transcript = fs.readFileSync(transcriptPath, 'utf8');
+
+    // Prompt cho AI – muốn chỉnh tone thì sửa đoạn text này
+    const prompt =
+      (language === 'vi'
+        ? `Bạn là một chuyên gia phỏng vấn. Dưới đây là transcript các câu trả lời của ứng viên cho nhiều câu hỏi phỏng vấn.\n
+Nhiệm vụ của bạn:
+1. Nhận xét tổng quan về chất lượng trả lời (rõ ràng, logic, ví dụ, cấu trúc).
+2. Với từng câu (Q1, Q2, ...), hãy:
+   - Chỉ ra điểm yếu / chỗ chưa tốt trong câu trả lời hiện tại.
+   - Viết lại một phiên bản câu trả lời tốt hơn, súc tích nhưng thuyết phục hơn.
+3. Đưa thêm một vài gợi ý chung để ứng viên luyện tập cải thiện.\n
+Transcript (giữ nguyên, đừng sửa nội dung bên dưới, chỉ dùng để tham chiếu):\n\n`
+        : `You are an interview coach. Below is the transcript of the candidate's answers to multiple interview questions.\n
+Your tasks:
+1. Give an overview of the quality of the answers (clarity, structure, examples, logic).
+2. For each question (Q1, Q2, ...):
+   - Point out weaknesses / missing points.
+   - Rewrite a stronger, more concise and persuasive answer.
+3. Add a few general tips for the candidate to improve.\n
+Transcript (do not modify this content, just use it as reference):\n\n`) + transcript;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    res.json({ ok: true, feedback: text });
+  } catch (err) {
+    console.error('AI review error:', err);
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to generate AI feedback' });
+  }
+});
+
 
 // --- Serve The Frontend (No change) ---
 app.get('/', (req, res) => {
