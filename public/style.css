@@ -1,0 +1,371 @@
+/* --- Cài đặt chung & Biến màu --- */
+html {
+    scroll-behavior: smooth;
+}
+
+:root {
+    --background-dark: #10101E;
+    /* Màu nền tối (từ mockup) */
+    --text-primary: #FFFFFF;
+    /* Màu chữ chính (trắng) */
+    --text-secondary: #B0B0C0;
+    /* Màu chữ phụ (xám nhạt) */
+    --button-primary-bg: #FFFFFF;
+    --button-primary-text: #10101E;
+}
+
+/* --- Reset cơ bản & Font chữ --- */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    /* Dùng font 'Poppins' cho đẹp */
+    color: var(--text-primary);
+    overflow-x: hidden;
+    /* Tránh cuộn ngang */
+
+    /* --- ĐÂY LÀ PHẦN THÊM MỚI --- */
+
+    /* 1. Màu nền tối CƠ BẢN (vẫn giữ) */
+    background-color: var(--background-dark);
+
+    /* 2. "Vẽ" 2 đốm blur đè lên trên (phân cách bằng dấu phẩy) */
+    background-image:
+        /* Đốm 1: Màu vàng/lục bên trái (giống mockup) */
+        radial-gradient(circle 800px at -10% 40%,
+            /* Hình tròn, 800px, ở bên trái-trên */
+            rgba(171, 183, 114, 0.80),
+            /* Màu vàng/lục, mờ (opacity 10%) */
+            transparent 80%
+            /* Mờ dần về trong suốt */
+        ),
+        /* Đốm 2: Màu xanh/tím bên phải (giống mockup) */
+        radial-gradient(circle 600px at 110% 50%,
+            /* Hình tròn, 600px, ở bên phải-giữa */
+            rgba(100, 100, 200, 0.65),
+            /* Màu xanh/tím, mờ (opacity 12%) */
+            transparent 80%
+            /* Mờ dần về trong suốt */
+        );
+
+    /* Đảm bảo các đốm blur không bị lặp lại */
+    background-repeat: no-repeat;
+    /* Giữ các đốm blur cố định khi người dùng cuộn trang */
+    background-attachment: fixed;
+}
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    /* Giới hạn chiều rộng tối đa */
+    margin: 0 auto;
+    /* Tự động căn giữa */
+}
+
+/* --- 1. Thanh điều hướng (Navbar) --- */
+header {
+    padding: 25px 0;
+}
+
+header .container {
+    display: flex;
+    /* Dùng Flexbox */
+    justify-content: space-between;
+    /* Đẩy logo và links ra 2 bên */
+    align-items: center;
+    /* Căn giữa theo chiều dọc */
+}
+
+.logo a {
+    font-size: 24px;
+    font-weight: 700;
+    /* Bold */
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.nav-links {
+    list-style: none;
+    /* Bỏ dấu chấm của <li> */
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin-left: 30px;
+    /* Khoảng cách giữa About và Contact */
+}
+
+.nav-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.nav-links a:hover {
+    color: var(--text-primary);
+    /* Đổi màu khi di chuột */
+}
+
+/* --- 2. Phần nội dung chính (Hero Section) --- */
+.hero-container {
+    display: flex;
+    /* Dùng Flexbox để chia 2 cột */
+    align-items: center;
+    /* Căn giữa 2 cột theo chiều dọc */
+    padding-top: 40px;
+    padding-bottom: 60px;
+    gap: 40px;
+    /* Khoảng cách giữa 2 cột */
+}
+
+/* Cột bên trái: Chữ */
+.hero-text {
+    flex: 1;
+    /* Cột này sẽ chiếm 1 phần (khoảng 50%) */
+    animation: fadeIn 1s ease-in-out;
+    /* Hiệu ứng xuất hiện */
+}
+
+.hero-text h1 {
+    font-size: 48px;
+    /* Cỡ chữ to cho tiêu đề */
+    margin-bottom: 20px;
+    line-height: 1.2;
+    /* Giãn cách dòng */
+}
+
+.hero-text p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    max-width: 500px;
+    /* Giới hạn chiều rộng của đoạn văn */
+}
+
+/* Cột bên phải: Hình ảnh */
+.hero-image {
+    /* Commitment to career growth and remote work culture */
+
+    flex: 1;
+    /* Cột này cũng chiếm 1 phần */
+    text-align: center;
+    /* Căn giữa hình ảnh */
+    animation: slideIn 1s ease-in-out;
+    /* Hiệu ứng trượt vào */
+}
+
+.hero-image img {
+    max-width: 100%;
+    /* Đảm bảo ảnh không bị tràn */
+    height: auto;
+}
+
+/* --- 3. Nút bấm (CTA Buttons) --- */
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    /* Khoảng cách giữa 2 nút */
+}
+
+/* Thiết kế chung cho nút */
+.btn {
+    padding: 12px 30px;
+    border-radius: 50px;
+    /* Bo tròn (pill-shape) */
+    text-decoration: none;
+    font-weight: 700;
+    /* Chữ đậm */
+    font-size: 16px;
+    transition: all 0.3s ease;
+    /* Hiệu ứng chuyển động mượt */
+}
+
+/* Nút chính: "Start Here" */
+.btn-primary {
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-text);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    /* Nhấc lên 1 chút khi di chuột */
+}
+
+/* Nút phụ: "About Us" */
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--text-primary);
+    color: var(--background-dark);
+    border-color: var(--text-primary);
+}
+
+/* --- Hiệu ứng Animation (Cho đẹp) --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+/* --- Responsive (Cho điện thoại) --- */
+@media (max-width: 768px) {
+    .hero-container {
+        flex-direction: column;
+        /* Xếp 2 cột chồng lên nhau */
+        text-align: center;
+        /* Căn giữa mọi thứ */
+    }
+
+    .hero-text h1 {
+        font-size: 36px;
+        /* Giảm cỡ chữ tiêu đề */
+    }
+
+    .cta-buttons {
+        justify-content: center;
+        /* Căn giữa 2 nút */
+    }
+
+    .hero-image {
+        margin-top: 30px;
+        /* Đẩy hình ảnh xuống dưới */
+    }
+}
+
+/* --- 4. Phần About Us --- */
+
+.about-container {
+    /* Dùng Flexbox để chia 2 cột */
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    /* Khoảng cách giữa 2 cột */
+
+    /* Căn giữa và tạo khoảng cách trên dưới */
+    width: 90%;
+    max-width: 1100px;
+    margin: 100px auto;
+    /* 100px là khoảng cách trên/dưới */
+
+    /* Thêm các đường sọc dọc mờ (giống mockup) */
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 30% 100%, 70% 100%;
+    /* Vị trí của 2 đường sọc */
+    background-position: left top, right top;
+    background-repeat: no-repeat;
+}
+
+/* Cột bên trái: Hình ảnh */
+.about-image {
+    flex: 1;
+    /* Chiếm 1 phần (khoảng 50%) */
+    animation: fadeIn 1.5s ease-in-out;
+    /* Hiệu ứng xuất hiện */
+}
+
+.about-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Cột bên phải: Chữ */
+.about-text {
+    flex: 1;
+    /* Chiếm 1 phần */
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+.about-text h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    /* Màu xám nhạt */
+    letter-spacing: 1px;
+    /* Giãn cách chữ */
+}
+
+.about-text h3 {
+    font-size: 36px;
+    color: var(--text-primary);
+    /* Màu trắng */
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.about-text p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    /* Giãn cách dòng */
+    margin-bottom: 15px;
+}
+
+.about-text p strong {
+    color: var(--text-primary);
+    /* In đậm màu trắng */
+}
+
+.about-text h4 {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 30px;
+    letter-spacing: 1px;
+}
+
+.featured-logo {
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Nền mờ cho logo */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    /* Bo góc */
+    padding: 15px;
+    display: inline-block;
+    /* Chỉ bọc vừa đủ logo */
+    margin-top: 10px;
+}
+
+.featured-logo img {
+    max-width: 100%;
+    /* Đảm bảo logo vừa vặn */
+    height: auto;
+    display: block;
+}
+
+/* --- Responsive (Cho điện thoại) --- */
+@media (max-width: 768px) {
+    .about-container {
+        flex-direction: column;
+        /* Xếp 2 cột chồng lên nhau */
+        text-align: center;
+        /* Căn giữa */
+        background-image: none;
+        /* Tắt sọc dọc trên điện thoại */
+    }
+}

@@ -1,0 +1,179 @@
+/* --- Cài đặt chung --- */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    color: white;
+    background-color: #0a0a16;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(171, 183, 114, 0.80) 0%, rgba(0, 242, 255, 0) 50%),
+        radial-gradient(circle at 85% 75%, rgba(67, 128, 218, 0.6) 0%, rgba(255, 0, 212, 0) 50%),
+        radial-gradient(circle at 50% 50%, rgba(106, 0, 255, 0.4) 0%, rgba(10, 10, 22, 0) 70%);
+
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    /* Cố định nền khi cuộn */
+    background-size: cover;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* --- Thêm class cho Logo ở góc trái --- */
+.logo-corner {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.logo-corner a {
+    text-decoration: none;
+    color: white;
+    /* Màu trắng */
+    transition: opacity 0.3s;
+}
+
+.logo-corner a:hover {
+    opacity: 0.8;
+}
+
+/* --- Card Log In chính --- */
+.login-card {
+    display: flex;
+    /* Chia 2 cột (Form và Ảnh) */
+    width: 900px;
+    background-color: #FFF8C6;
+    /* Màu vàng nhạt (từ mockup) */
+    border-radius: 25px;
+    /* Bo góc lớn */
+    overflow: hidden;
+    /* Giúp bo góc cho cả ảnh */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Cột 1: Form --- */
+.login-form {
+    flex: 1;
+    /* Chiếm 1 phần */
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    /* Xếp các phần tử theo cột */
+    justify-content: center;
+}
+
+.login-form h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a2e;
+    /* Màu đen */
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #1a1a2e;
+    /* Viền đen */
+    border-radius: 30px;
+    /* Bo tròn */
+    background-color: #fff;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+    /* Rất quan trọng */
+}
+
+.input-group input::placeholder {
+    color: #888;
+}
+
+.login-button {
+    padding: 15px 20px;
+    border: none;
+    border-radius: 30px;
+    /* Bo tròn */
+    background-color: #1a1a2e;
+    /* Nền đen */
+    color: white;
+    /* Chữ trắng */
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #333;
+}
+
+/* --- Cột 2: Hình ảnh --- */
+.login-image {
+    flex: 1;
+    /* Chiếm 1 phần */
+    background-color: #FFF8C6;
+    /* Màu vàng nhạt hơn (từ mockup) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.login-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* --- Responsive (Cho điện thoại) --- */
+@media (max-width: 900px) {
+    .login-card {
+        flex-direction: column;
+        /* Xếp chồng 2 cột */
+        width: 90%;
+        margin: 20px;
+    }
+
+    .login-form {
+        padding: 40px;
+    }
+
+    .login-image {
+        /* Ẩn ảnh trên điện thoại cho gọn */
+        display: none;
+    }
+}
+
+.error-message {
+    color: #000000 !important;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-card {
+    animation: fadeInUp 1s ease-out;
+}
