@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả - CandiGo</title>
+    <link rel="stylesheet" href="login.style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .thank-you-card {
+            background-color: #1a1a2e;
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid #444;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-ai {
+            background: linear-gradient(to right, #8e2de2, #4a00e0);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: 0.3s;
+        }
+
+        .btn-ai:hover {
+            transform: scale(1.05);
+        }
+
+        .ai-result {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ddd;
+            white-space: pre-wrap;
+            /* Giữ định dạng xuống dòng của AI */
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo-corner">
+        <a href="index.html">CANDIGO</a>
+    </div>
+
+    <div class="thank-you-card">
+        <h1>🎉 Congratulations!</h1>
+        <p>Your whole interview is saved</p>
+
+        <button id="ai-btn" class="btn-ai">🤖 Need help from AI Gemini?</button>
+
+        <div id="ai-box" class="ai-result hidden">
+            <strong>Hold up Gemini is analyzing...</strong>
+        </div>
+
+        <br>
+        <a href="index.html" style="color: #888; text-decoration: none;">Back to home</a>
+    </div>
+
+    <script>
+        const aiBtn = document.getElementById('ai-btn');
+        const aiBox = document.getElementById('ai-box');
+        const sessionFolder = sessionStorage.getItem('sessionFolder');
+
+        aiBtn.addEventListener('click', async () => {
+            if (!sessionFolder) {
+                alert("Không tìm thấy phiên làm việc!");
+                return;
+            }
+
+            aiBtn.disabled = true;
+            aiBtn.textContent = "Gemini is thinking...";
+            aiBox.classList.remove('hidden');
+            aiBox.innerHTML = "<em>Connecting with Gemini... (It might take a few seconds)</em>";
+
+            try {
+                // Gọi API AI Review
+                const res = await fetch('/api/ai-review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        folder: sessionFolder,
+                        language: 'vi'
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.ok) {
+                    aiBtn.textContent = "Yeah we got the results";
+                    // Hiển thị lời nhận xét của AI
+                    aiBox.textContent = data.feedback;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                aiBox.innerHTML = `<span style="color:red">Error: ${err.message}.<br>Please check API Key in file .env</span>`;
+                aiBtn.disabled = false;
+                aiBtn.textContent = "Try again";
+            }
+        });
+    </script>
+</body>
+
+</html>

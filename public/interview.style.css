@@ -1,0 +1,319 @@
+/* --- Cài đặt chung & Biến màu --- */
+:root {
+    --background-dark: #10101E;
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0C0;
+    --primary-blue: #007bff;
+    --error-red: #D8000C;
+    --error-bg: #FFD2D2;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    color: white;
+    margin: 0;
+    padding: 0;
+    background-color: #0a0a16;
+    background-image:
+        radial-gradient(circle at 15% 25%, rgba(171, 183, 114, 0.80) 0%, rgba(0, 242, 255, 0) 50%),
+        radial-gradient(circle at 85% 75%, rgba(14, 6, 255, 0.6) 0%, rgba(255, 0, 212, 0) 50%),
+        radial-gradient(circle at 50% 50%, rgba(106, 0, 255, 0.4) 0%, rgba(10, 10, 22, 0) 70%);
+
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- Header --- */
+header {
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.live-indicator {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FF4D4D;
+    display: flex;
+    align-items: center;
+}
+
+.live-indicator span {
+    width: 8px;
+    height: 8px;
+    background-color: #FF4D4D;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+/* --- Khu vực phỏng vấn chính --- */
+.interview-container {
+    flex: 1;
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    margin: 40px auto;
+    gap: 30px;
+}
+
+.video-wrapper {
+    flex: 2;
+    position: relative;
+    background-color: #000;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+#camera-preview {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 18px;
+}
+
+/* Cột 2: Điều khiển */
+.controls-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#question-area {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+#question-area h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+}
+
+#question-area p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* Khu vực trạng thái (Loading, Error) */
+#status-area {
+    margin: 15px 0;
+    min-height: 50px;
+}
+
+.status-message {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.error-message {
+    color: var(--error-red);
+    background-color: var(--error-bg);
+    justify-content: space-between;
+}
+
+#loading-indicator {
+    color: #004085;
+    background-color: #CCE5FF;
+}
+
+.spinner {
+    border: 3px solid #BEE5EB;
+    border-top: 3px solid var(--primary-blue);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+    margin-right: 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.button-controls {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-primary, .btn-secondary, .btn-retry {
+    padding: 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--text-secondary);
+}
+.btn-secondary:hover {
+    background-color: var(--text-secondary);
+    color: var(--background-dark);
+}
+.btn-retry {
+    background-color: var(--error-red);
+    color: white;
+    padding: 8px 15px;
+    font-size: 14px;
+}
+.btn-retry:hover { background-color: #a70000; }
+
+.hidden { display: none !important; }
+
+.btn-primary:disabled {
+    background-color: #555;
+    color: #999;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    .interview-container { flex-direction: column; margin-top: 20px; }
+    .video-wrapper { min-height: 300px; }
+}
+
+.transcript-overlay {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 50px;
+    max-height: 100px;
+    overflow-y: auto;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-hint {
+    background-color: #6c5ce7;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.btn-hint:hover { background-color: #a29bfe; }
+
+.hint-card {
+    background: rgba(20, 20, 40, 0.95);
+    border: 1px solid #6c5ce7;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    color: #dfe6e9;
+    font-size: 14px;
+    animation: slideUp 0.3s ease;
+}
+
+.hint-card h4 { margin: 0 0 10px 0; color: #a29bfe; }
+.hint-card ul { padding-left: 20px; margin: 0; }
+.hint-card li { margin-bottom: 5px; }
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- PROGRESS BAR STYLES --- */
+.upload-container {
+    padding: 10px 0;
+    width: 100%;
+}
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+.progress-track {
+    width: 100%;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #8e2de2, #4a00e0);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+}

@@ -1,227 +1,238 @@
-require('dotenv').config(); // đọc .env
+require('dotenv').config();
 
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
-
-// === GEMINI CONFIG ===
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-if (!process.env.GEMINI_API_KEY) {
-  console.warn('⚠️ GEMINI_API_KEY is missing in .env');
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });  
 
 const app = express();
 const port = 3000;
 
-// --- Middleware ---
+// --- CẤU HÌNH ---
+// 1. Gemini Key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }); // Dùng Flash cho nhanh
+
+// 2. Discord Webhook
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1440620971676401775/LXW_nLzJV1ogXqe-_1pSha4cEQdJABWeVb39PhB2GhtpJh-qjde4dGZKJ3DoJLqA5Kdu";
+const DISCORD_LIMIT_MB = 25;
+const ADMIN_EMAIL = "hr_manager@company.com";
+
 app.use(cors());
 app.use(express.json());
+// Dòng này quan trọng để hiện giao diện:
+app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Helper Functions (No change) ---
+// --- HELPER FUNCTIONS ---
 function sanitizeName(name) {
   return name.replace(/[^a-z0-9_]/gi, '_').toLowerCase();
 }
 function getFormattedDate() {
   const d = new Date();
   const pad = (n) => (n < 10 ? '0' + n : n);
-  return (
-    pad(d.getDate()) +
-    '_' +
-    pad(d.getMonth() + 1) +
-    '_' +
-    d.getFullYear() +
-    '_' +
-    pad(d.getHours()) +
-    '_' +
-    pad(d.getMinutes())
-  );
+  return `${pad(d.getDate())}_${pad(d.getMonth() + 1)}_${d.getFullYear()}_${pad(d.getHours())}_${pad(d.getMinutes())}`;
 }
 
-// --- API Endpoints ---
+// --- API ROUTES ---
 
-// POST /api/verify-token (No change)
+// 1. Verify Token
 app.post('/api/verify-token', (req, res) => {
   const { token } = req.body;
-  console.log(`Verifying token: ${token}`);
-  if (token === 'VALID_TOKEN_123') {
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false, message: 'Invalid token' });
-  }
+  if (token === 'VALID_TOKEN_123') res.json({ ok: true });
+  else res.status(401).json({ ok: false });
 });
 
-// POST /api/session/start (No change)
+// 2. Start Session
 app.post('/api/session/start', (req, res) => {
   const { token, userName } = req.body;
-  if (token !== 'VALID_TOKEN_123') {
-    return res.status(401).json({ ok: false, message: 'Invalid token' });
-  }
-  const safeName = sanitizeName(userName);
-  const folderName = `${getFormattedDate()}_${safeName}`;
+  if (token !== 'VALID_TOKEN_123') return res.status(401).json({ ok: false });
+
+  const folderName = `${getFormattedDate()}_${sanitizeName(userName)}`;
   const folderPath = path.join(__dirname, 'uploads', folderName);
 
   try {
     fs.mkdirSync(folderPath, { recursive: true });
-    console.log(`Created folder: ${folderPath}`);
-    const meta = {
-      token,
-      userName,
-      startTime: new Date().toISOString(),
-      questions: [],
-    };
-    fs.writeFileSync(
-      path.join(folderPath, 'meta.json'),
-      JSON.stringify(meta, null, 2)
-    );
+    const meta = { token, userName, startTime: new Date().toISOString(), questions: [] };
+    fs.writeFileSync(path.join(folderPath, 'meta.json'), JSON.stringify(meta, null, 2));
     res.json({ ok: true, folder: folderName });
   } catch (err) {
-    console.error(`Error creating folder: ${err}`);
-    res.status(500).json({ ok: false, message: 'Failed to create session' });
+    res.status(500).json({ ok: false });
   }
 });
 
-// --- Multer Setup (No change) ---
+// 3. Upload One (Lưu video + transcript)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const folderPath = path.join(__dirname, 'uploads', req.body.folder);
-    cb(null, folderPath);
+    const dir = path.join(__dirname, 'uploads', req.body.folder);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const fileName = `Q${req.body.questionIndex}.webm`;
-    cb(null, fileName);
+    cb(null, `Q${req.body.questionIndex}.webm`);
   },
 });
 const upload = multer({ storage: storage });
 
-// --- MODIFIED: /api/upload-one ---
-// This is no longer 'async'. We removed all OpenAI code.
 app.post('/api/upload-one', upload.single('video'), (req, res) => {
-  // 'transcript' is now in req.body because it's a text field in the FormData
-  const { token, folder, questionIndex, transcript } = req.body;
+  const { folder, questionIndex, transcript } = req.body;
   const savedFile = req.file;
-  const savedAs = savedFile.filename;
-
-  console.log(
-    `Received upload for folder: ${folder}, Q: ${questionIndex}, saved as: ${savedAs}`
-  );
-  const metaPath = path.join(__dirname, 'uploads', folder, 'meta.json');
 
   try {
-    // 1. Update metadata (same as before)
-    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-    meta.questions.push({
-      index: questionIndex,
-      file: savedAs,
-      uploadTime: new Date().toISOString(),
-      transcript: transcript, // NEW: We can even save the transcript in the meta file
-    });
-    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+    const metaPath = path.join(__dirname, 'uploads', folder, 'meta.json');
+    if (fs.existsSync(metaPath)) {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      meta.questions.push({
+        index: questionIndex,
+        file: savedFile.filename,
+        transcript: transcript,
+        uploadTime: new Date().toISOString()
+      });
+      fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
 
-    // --- NEW: Save to transcript.txt ---
-    console.log(`Saving transcript for Q${questionIndex}: ${transcript}`);
-    const transcriptPath = path.join(
-      __dirname,
-      'uploads',
-      folder,
-      'transcript.txt'
-    );
-    const transcriptContent = `Q${questionIndex}: ${transcript}\n\n`;
-
-    // Use 'appendFileSync' to add this question's text to the file
-    fs.appendFileSync(transcriptPath, transcriptContent);
-    // --- End of NEW Step ---
-
-    // Send success response (same as before)
-    res.json({ ok: true, savedAs: savedAs });
-  } catch (err) {
-    console.error(`Error processing upload: ${err}`);
-    res.status(500).json({ ok: false, message: 'Failed to process upload' });
-  }
-});
-
-// POST /api/session/finish (No change)
-app.post('/api/session/finish', (req, res) => {
-  const { token, folder, questionsCount } = req.body;
-  console.log(`Finishing session for folder: ${folder}`);
-  const metaPath = path.join(__dirname, 'uploads', folder, 'meta.json');
-  try {
-    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
-    meta.finishTime = new Date().toISOString();
-    meta.totalQuestionsReported = questionsCount;
-    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
-
+      // Lưu Transcript để AI đọc sau này
+      const transPath = path.join(__dirname, 'uploads', folder, 'transcript.txt');
+      fs.appendFileSync(transPath, `Q${questionIndex}: ${transcript || "(No speech)"}\n\n`);
+    }
     res.json({ ok: true });
   } catch (err) {
-    console.error(`Error finalizing metadata: ${err}`);
-    res.status(500).json({ ok: false, message: 'Failed to finalize session' });
+    console.error(err);
+    res.status(500).json({ ok: false });
   }
 });
-// POST /api/ai-review
-// body: { folder: "2025_11_20_..._username", language?: "vi" | "en" }
-app.post('/api/ai-review', async (req, res) => {
-  const { folder, language = 'vi' } = req.body;
 
-  if (!folder) {
-    return res.status(400).json({ ok: false, message: 'folder is required' });
+// 4. AI Assist (Gợi ý trực tiếp) 
+app.post('/api/ai-assist', async (req, res) => {
+  const { question, transcript } = req.body;
+
+  if (!GEMINI_API_KEY) return res.json({ success: false, error: "Server missing API Key" });
+
+  try {
+    let promptText;
+    if (transcript && transcript.length > 20) {
+      promptText = `
+             You are an expert interview coach. The candidate is answering: "${question}".
+             Their current speech: "${transcript}".
+             
+             Task:
+             1. Give 3 short tips to improve or continue their answer.
+             2. Suggest 1 strong next sentence (Opener) to keep the flow.
+             
+             Return ONLY raw JSON: { "tips": ["Tip 1", "Tip 2", "Tip 3"], "opener": "Example sentence..." }`;
+    } else {
+      promptText = `
+             You are an expert interview coach. The candidate is stuck on: "${question}".
+             
+             Task:
+             1. Give 3 short tips on how to structure the answer.
+             2. Suggest 1 strong opening sentence (Opener).
+             
+             Return ONLY raw JSON: { "tips": ["Tip 1", "Tip 2", "Tip 3"], "opener": "I believe that..." }`;
+    }
+
+    const result = await model.generateContent(promptText);
+    let textResponse = result.response.text();
+
+    // Làm sạch JSON
+    textResponse = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+    const jsonResponse = JSON.parse(textResponse);
+
+    res.json({ success: true, data: jsonResponse });
+
+  } catch (err) {
+    console.error("AI Assist Error:", err);
+    res.json({ success: false, error: "AI Connection Error." });
   }
+});
 
+// API 5: AI Review 
+app.post('/api/ai-review', async (req, res) => {
+  const { folder } = req.body;
   const transcriptPath = path.join(__dirname, 'uploads', folder, 'transcript.txt');
 
   if (!fs.existsSync(transcriptPath)) {
-    return res
-      .status(404)
-      .json({ ok: false, message: 'transcript.txt not found for this folder' });
+    return res.status(404).json({ ok: false, message: 'No transcript found.' });
   }
 
   try {
-    const transcript = fs.readFileSync(transcriptPath, 'utf8');
+    const transcriptText = fs.readFileSync(transcriptPath, 'utf8');
 
-    // Prompt cho AI – muốn chỉnh tone thì sửa đoạn text này
-    const prompt =
-      (language === 'vi'
-        ? `Bạn là một chuyên gia phỏng vấn. Dưới đây là transcript các câu trả lời của ứng viên cho nhiều câu hỏi phỏng vấn.\n
-Nhiệm vụ của bạn:
-1. Nhận xét tổng quan về chất lượng trả lời (rõ ràng, logic, ví dụ, cấu trúc).
-2. Với từng câu (Q1, Q2, ...), hãy:
-   - Chỉ ra điểm yếu / chỗ chưa tốt trong câu trả lời hiện tại.
-   - Viết lại một phiên bản câu trả lời tốt hơn, súc tích nhưng thuyết phục hơn.
-3. Đưa thêm một vài gợi ý chung để ứng viên luyện tập cải thiện.\n
-Transcript (giữ nguyên, đừng sửa nội dung bên dưới, chỉ dùng để tham chiếu):\n\n`
-        : `You are an interview coach. Below is the transcript of the candidate's answers to multiple interview questions.\n
-Your tasks:
-1. Give an overview of the quality of the answers (clarity, structure, examples, logic).
-2. For each question (Q1, Q2, ...):
-   - Point out weaknesses / missing points.
-   - Rewrite a stronger, more concise and persuasive answer.
-3. Add a few general tips for the candidate to improve.\n
-Transcript (do not modify this content, just use it as reference):\n\n`) + transcript;
+
+    const prompt = `
+        You are a professional recruiter. Evaluate the following interview transcript:
+        "${transcriptText}"
+        
+        Please provide a concise review in English:
+        1. Strengths (What they did well).
+        2. Weaknesses (Areas for improvement).
+        3. Overall Score (0/10).
+        `;
 
     const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const text = result.response.text();
 
     res.json({ ok: true, feedback: text });
   } catch (err) {
-    console.error('AI review error:', err);
-    res
-      .status(500)
-      .json({ ok: false, message: 'Failed to generate AI feedback' });
+    console.error("AI Review Error:", err);
+    res.status(500).json({ ok: false, message: "AI Error: " + err.message });
   }
 });
 
+// 6. Finish Session (Gửi Discord)
+app.post('/api/session/finish', async (req, res) => {
+  const { folder, questionsCount } = req.body;
+  console.log(`Finishing: ${folder}`);
 
-// --- Serve The Frontend (No change) ---
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Gửi Discord
+  if (WEBHOOK_URL && WEBHOOK_URL.startsWith("http")) {
+    const folderPath = path.join(__dirname, 'uploads', folder);
+    console.log("[Server] Waiting 2s for files...");
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    try {
+      if (fs.existsSync(folderPath)) {
+        const files = fs.readdirSync(folderPath).sort();
+        for (const file of files) {
+          if (file.endsWith('.webm')) {
+            const filePath = path.join(folderPath, file);
+            const stats = fs.statSync(filePath);
+
+            if (stats.size / (1024 * 1024) > DISCORD_LIMIT_MB) continue;
+
+            const fileBuffer = fs.readFileSync(filePath);
+            const blob = new Blob([fileBuffer], { type: 'video/webm' });
+            const formData = new FormData();
+            formData.append('candidate', folder);
+            formData.append('filename', file);
+            formData.append('video_file', blob, file);
+
+            try {
+              await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+              console.log(`Sent ${file} to Discord`);
+            } catch (e) { console.error(e); }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  // Update Meta
+  try {
+    const metaPath = path.join(__dirname, 'uploads', folder, 'meta.json');
+    if (fs.existsSync(metaPath)) {
+      const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+      meta.finishTime = new Date().toISOString();
+      meta.totalQuestionsReported = questionsCount;
+      fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+    }
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ ok: false }); }
 });
 
-// --- Start The Server (No change) ---
 app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });

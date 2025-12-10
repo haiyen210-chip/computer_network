@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview in Progress - CandiGo</title>
+    <link rel="stylesheet" href="interview.style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.html" style="text-decoration: none; color: white;">CANDIGO</a>
+            </div>
+            <div class="live-indicator">
+                <span></span> RECORDING
+            </div>
+        </div>
+    </header>
+
+    <main class="interview-container">
+        <div class="video-wrapper">
+            <video id="camera-preview" autoplay playsinline muted></video>
+
+            <div id="transcript-box" class="transcript-overlay">(Your speech will appear here...)</div>
+
+            <div id="permission-prompt" class="video-overlay hidden">
+                <p>Please allow camera and microphone access...</p>
+            </div>
+        </div>
+
+        <div class="controls-wrapper">
+            <div id="question-area" class="hidden">
+                <h3 id="question-title">Question 1/5</h3>
+                <p id="question-text">...</p>
+
+                <button id="hint-btn" class="btn-hint">💡Get AI Hint</button>
+            </div>
+
+            <div id="hint-box" class="hint-card hidden">
+                <h4>🤖 AI Coach says:</h4>
+                <div id="hint-content">Analyzing...</div>
+                <div id="hint-opener" style="margin-top:10px; font-style:italic; color:#4db8ff;"></div>
+                <button id="close-hint" style="margin-top:10px; font-size:12px;">Close</button>
+            </div>
+
+            <div id="status-area">
+                <!-- PROGRESS BAR: This ID is critical for the JS to find -->
+                <div id="upload-progress-container" class="upload-container hidden">
+                    <div class="progress-label">
+                        <span id="progress-text">Uploading answer...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div id="loading-indicator" class="status-message hidden">
+                    <div class="spinner"></div>
+                    <span>Processing video...</span>
+                </div>
+
+                <div id="upload-error" class="status-message error-message hidden">
+                    <span>Connection Error! Cannot upload.</span>
+                    <button id="retry-button" class="btn btn-retry">Retry</button>
+                </div>
+            </div>
+
+            <div class="button-controls">
+                <button id="start-button" class="btn btn-primary" style="background-color: #28a745;">
+                    Start Interview
+                </button>
+
+                <button id="next-button" class="btn btn-primary hidden">
+                    Next Question
+                </button>
+
+                <button id="finish-button" class="btn btn-secondary hidden">
+                    Finish Interview
+                </button>
+            </div>
+        </div>
+    </main>
+    <script src="interview.js"></script>
+
+</body>
+
+</html>

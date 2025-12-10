@@ -1,0 +1,12 @@
+# Bỏ qua thư viện nặng
+node_modules/
+
+# Bỏ qua biến môi trường (chứa Key bí mật)
+.env
+
+# Bỏ qua các file video đã test
+uploads/
+
+# Bỏ qua file hệ thống
+.DS_Store
+Thumbs.db
