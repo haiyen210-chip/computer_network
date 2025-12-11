@@ -10,12 +10,13 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 const port = 3000;
 
-// --- CẤU HÌNH ---
-// 1. Gemini Key
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyBo6i-H6Ns-1yb4BWAnRIfXDHHj0wUGVdI";
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Dùng Flash cho nhanh
 
+// 1. Gemini Key
+// Note: I masked your key below for safety. Put your actual key back or use .env
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "YOUR_ACTUAL_API_KEY_HERE"; 
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// You had 'gemini-2.5-flash' in your code, ensure that model name is correct for your usage
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 // 2. Discord Webhook
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1440620971676401775/LXW_nLzJV1ogXqe-_1pSha4cEQdJABWeVb39PhB2GhtpJh-qjde4dGZKJ3DoJLqA5Kdu";
 const DISCORD_LIMIT_MB = 25;
